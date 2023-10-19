@@ -59,13 +59,16 @@ async def update_post_info(session: Session, post_id: int, info_update: CreateAn
 
 
 # Function to delete a post info from the db
-def delete_post_info(session: Session, _id: int):
-    post_info = get_post_info_by_id(session, _id)
+async def delete_post_info(session: Session, post_id: int, user):
+    existing_post = await get_post_info_by_id(session, post_id)
 
-    if post_info is None:
+    if existing_post is None:
         raise PostInfoNotFoundError
 
-    session.delete(post_info)
-    session.commit()
+    if existing_post.user_id != str(user.id):
+        raise PostInfoDoesNotBelongToYouError
 
-    return
+    await session.delete(existing_post)
+    await session.commit()
+
+    return {'message': 'Post was deleted successfully'}
