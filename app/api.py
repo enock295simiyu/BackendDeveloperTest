@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi_restful.cbv import cbv
 from sqlalchemy.orm import Session
 
-from app.crud import create_post, get_users_posts
+from app.crud import create_post, get_users_posts, update_post_info
 from app.db import get_async_session, User
 from app.exceptions import PostInfoException
 from app.schemas import PaginatedPostInfo, CreateAndUpdatePost
@@ -34,6 +34,16 @@ class PostsView:
 
         try:
             post_info = await create_post(self.session, post_info, user)
+            return post_info
+        except PostInfoException as cie:
+            raise HTTPException(**cie.__dict__)
+
+    @router.put("/posts/{post_id}")
+    async def update_post(self, post_id: int, post_info: CreateAndUpdatePost,
+                          user: User = Depends(current_active_user)):
+
+        try:
+            post_info = await update_post_info(self.session, post_id=post_id, info_update=post_info, user=user)
             return post_info
         except PostInfoException as cie:
             raise HTTPException(**cie.__dict__)

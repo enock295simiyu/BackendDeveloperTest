@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.exceptions import PostInfoNotFoundError
+from app.exceptions import PostInfoNotFoundError, PostInfoDoesNotBelongToYouError
 from app.models import PostInfo
 from app.schemas import CreateAndUpdatePost
 
@@ -20,8 +20,8 @@ async def get_users_posts(session: Session, user, limit: int, offset: int):
 
 
 # Function to  get info of a particular post
-def get_post_info_by_id(session: Session, _id: int) -> PostInfo:
-    post_info = session.query(PostInfo).get(_id)
+async def get_post_info_by_id(session: Session, _id: int) -> PostInfo:
+    post_info = await session.get(PostInfo, _id)
 
     if post_info is None:
         raise PostInfoNotFoundError
@@ -40,23 +40,20 @@ async def create_post(session: Session, post_info: CreateAndUpdatePost, user) ->
     return new_post_info
 
 
-# Function to update details of the car
-def update_car_info(session: Session, _id: int, info_update: CreateAndUpdatePost) -> PostInfo:
-    post_info = get_post_info_by_id(session, _id)
+# Function to update details of the post
+async def update_post_info(session: Session, post_id: int, info_update: CreateAndUpdatePost, user) -> PostInfo:
+    post_info = await get_post_info_by_id(session, post_id)
 
     if post_info is None:
         raise PostInfoNotFoundError
 
-    post_info.manufacturer = info_update.manufacturer
-    post_info.modelName = info_update.modelName
-    post_info.fuelType = info_update.fuelType
-    post_info.cc = info_update.cc
-    post_info.gearBox = info_update.gearBox
-    post_info.onRoadPrice = info_update.onRoadPrice
-    post_info.seatingCapacity = info_update.seatingCapacity
+    if post_info.user_id != str(user.id):
+        raise PostInfoDoesNotBelongToYouError
 
-    session.commit()
-    session.refresh(post_info)
+    post_info.title = info_update.title
+    post_info.content = info_update.content
+
+    await session.commit()
 
     return post_info
 
