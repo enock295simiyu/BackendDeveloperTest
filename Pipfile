@@ -10,6 +10,8 @@ fastapi-users = {extras = ["sqlalchemy"], version = "*"}
 uvicorn = {extras = ["standard"], version = "*"}
 mysqlclient = "*"
 asyncmy = "*"
+cachecontrol = "*"
+fastapi-cache2 = { extras = ["memcache"], version = "*" }
 
 [dev-packages]
 
