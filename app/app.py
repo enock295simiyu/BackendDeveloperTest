@@ -1,5 +1,6 @@
 from fastapi import Depends, FastAPI
 
+from app import api
 from app.db import User, create_db_and_tables
 from app.schemas import UserCreate, UserRead, UserUpdate
 from app.users import auth_backend, current_active_user, fastapi_users
@@ -30,6 +31,7 @@ app.include_router(
     tags=["users"],
 )
 
+app.include_router(api.router)
 
 @app.get("/authenticated-route")
 async def authenticated_route(user: User = Depends(current_active_user)):
